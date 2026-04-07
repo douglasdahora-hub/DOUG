@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D.O.U.G. Leads</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#0a0a0a;color:#e8e8e8;min-height:100vh;padding:24px}
+.logo{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:#00ff88;margin-bottom:8px}
+.logo span{color:#555}
+.sub{font-size:12px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:28px}
+.card{background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:14px}
+.ct{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;font-family:'Space Mono',monospace}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fg.full{grid-template-columns:1fr}
+.fl{display:flex;flex-direction:column;gap:5px}
+.fl.span2{grid-column:1/-1}
+label.lbl{font-size:12px;color:#888}
+input,select{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:9px 12px;color:#e8e8e8;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;width:100%}
+input:focus,select:focus{border-color:#00ff88}
+input::placeholder{color:#444}
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.ct2{display:flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 11px;cursor:pointer;font-size:13px;transition:all .2s;user-select:none}
+.ct2:hover{border-color:#00ff88}
+.ct2.on{border-color:#00ff88;background:#001a0d;color:#00ff88}
+.ct2 input{display:none}
+.dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0;transition:background .2s}
+.ct2.on .dot{background:#00ff88}
+.ac{display:flex;gap:8px;margin-top:9px}
+.ac input{flex:1}
+.badd{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:9px 14px;color:#888;cursor:pointer;font-size:13px;white-space:nowrap}
+.badd:hover{border-color:#00ff88;color:#00ff88}
+.bex{width:100%;background:#00ff88;color:#000;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px}
+.bex:hover{background:#00cc6a}
+.bex:disabled{background:#1a3a2a;color:#2a6a4a;cursor:not-allowed}
+.sb{display:none;background:#111;border:1px solid #222;border-radius:10px;padding:13px 15px;margin-bottom:14px;font-size:13px;color:#888;font-family:'Space Mono',monospace}
+.sb.on{display:flex;align-items:center;gap:10px}
+.sp{width:14px;height:14px;border:2px solid #333;border-top-color:#00ff88;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rc{display:none;background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;margin-bottom:14px}
+.rc.on{display:block}
+.rh{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #222}
+.rcount{font-family:'Space Mono',monospace;font-size:13px;color:#00ff88}
+.bcsv{background:transparent;border:1px solid #00ff88;border-radius:8px;padding:6px 13px;color:#00ff88;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif}
+.tw{overflow-x:auto;max-height:380px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:#0d0d0d;padding:9px 14px;text-align:left;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.07em;font-family:'Space Mono',monospace;position:sticky;top:0}
+tbody tr{border-bottom:1px solid #1a1a1a}
+tbody tr:hover{background:#151515}
+tbody td{padding:9px 14px;color:#ccc;vertical-align:top}
+.tn{color:#e8e8e8;font-weight:500}
+.tp{color:#00ff88;font-family:'Space Mono',monospace;font-size:12px}
+.err{display:none;background:#1a0a0a;border:1px solid #3a1a1a;border-radius:10px;padding:13px 15px;color:#ff6b6b;font-size:13px;margin-bottom:14px}
+.err.on{display:block}
+.sr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.sb2{background:#111;border:1px solid #222;border-radius:10px;padding:13px;text-align:center}
+.sn{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#00ff88}
+.sl{font-size:11px;color:#555;margin-top:3px;text-transform:uppercase;letter-spacing:.07em}
+.note{font-size:12px;color:#444;margin-top:6px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="logo">D.O.U.G<span>.</span>leads</div>
+<div class="sub">Extrator de Prospecção</div>
+<div class="card">
+  <div class="ct">Configuração</div>
+  <div class="fg">
+    <div class="fl"><label class="lbl">Segmento</label>
+    <select id="seg">
+      <option value="academia">Academia / Fitness</option>
+      <option value="crossfit">Crossfit</option>
+      <option value="escola">Escola</option>
+      <option value="clinica">Clínica</option>
+      <option value="barbearia">Barbearia</option>
+      <option value="restaurante">Restaurante</option>
+      <option value="padaria">Padaria</option>
+      <option value="salao de beleza">Salão de Beleza</option>
+      <option value="petshop">Pet Shop</option>
+      <option value="odontologia">Odontologia</option>
+    </select></div>
+    <div class="fl"><label class="lbl">Resultados por cidade</label>
+    <select id="lim">
+      <option value="20">20 por cidade</option>
+      <option value="40" selected>40 por cidade</option>
+      <option value="60">60 por cidade</option>
+    </select></div>
+  </div>
+  <div class="fl"><label class="lbl">API Key Google Places</label>
+  <input type="password" id="key" placeholder="Cole sua API Key aqui"/></div>
+</div>
+<div class="card">
+  <div class="ct">Cidades</div>
+  <div class="cg" id="cg">
+    <label class="ct2 on"><input type="checkbox" value="Ribeirao Preto SP" checked><div class="dot"></div>Ribeirão Preto</label>
+    <label class="ct2 on"><input type="checkbox" value="Guaruja SP" checked><div class="dot"></div>Guarujá</label>
+    <label class="ct2"><input type="checkbox" value="Franca SP"><div class="dot"></div>Franca</label>
+    <label class="ct2"><input type="checkbox" value="Sertaozinho SP"><div class="dot"></div>Sertãozinho</label>
+    <label class="ct2"><input type="checkbox" value="Barretos SP"><div class="dot"></div>Barretos</label>
+    <label class="ct2"><input type="checkbox" value="Araraquara SP"><div class="dot"></div>Araraquara</label>
+    <label class="ct2"><input type="checkbox" value="Sao Carlos SP"><div class="dot"></div>São Carlos</label>
+    <label class="ct2"><input type="checkbox" value="Jaboticabal SP"><div class="dot"></div>Jaboticabal</label>
+    <label class="ct2"><input type="checkbox" value="Bebedouro SP"><div class="dot"></div>Bebedouro</label>
+  </div>
+  <div class="ac">
+    <input type="text" id="nc" placeholder="Adicionar cidade..."/>
+    <button class="badd" onclick="addC()">+ Adicionar</button>
+  </div>
+</div>
+<div class="sr" id="sr" style="display:none">
+  <div class="sb2"><div class="sn" id="st">0</div><div class="sl">Total</div></div>
+  <div class="sb2"><div class="sn" id="sc">0</div><div class="sl">Com telefone</div></div>
+  <div class="sb2"><div class="sn" id="ss">0</div><div class="sl">Cidades</div></div>
+</div>
+<div class="sb" id="sb"><div class="sp"></div><span id="stxt">Buscando...</span></div>
+<div class="err" id="err"></div>
+<button class="bex" id="bex" onclick="run()">⚡ Extrair Leads</button>
+<div class="rc" id="rc">
+  <div class="rh">
+    <div class="rcount" id="rc2">0 leads</div>
+    <button class="bcsv" onclick="csv()">↓ Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Nome</th><th>Telefone</th><th>Cidade</th><th>Endereço</th><th>Avaliação</th><th>Site</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</div>
+<p class="note">⚠️ Dados públicos do Google Meu Negócio. Telefones cadastrados pelos próprios estabelecimentos.</p>
+<script>
+let R=[];
+document.querySelectorAll('.ct2').forEach(t=>{
+  t.addEventListener('click',()=>{
+    setTimeout(()=>{
+      const cb=t.querySelector('input');
+      t.classList.toggle('on',cb.checked);
+      t.querySelector('.dot').style.background=cb.checked?'#00ff88':'#333';
+    },0);
+  });
+});
+function addC(){
+  const i=document.getElementById('nc'),v=i.value.trim();
+  if(!v)return;
+  const val=v.includes(',')?v.replace(',',''):v+' SP';
+  const g=document.getElementById('cg');
+  const l=document.createElement('label');
+  l.className='ct2 on';
+  l.innerHTML='<input type="checkbox" value="'+val+'" checked><div class="dot" style="background:#00ff88"></div>'+v;
+  l.addEventListener('click',()=>{setTimeout(()=>{const cb=l.querySelector('input');l.classList.toggle('on',cb.checked);l.querySelector('.dot').style.background=cb.checked?'#00ff88':'#333';},0);});
+  g.appendChild(l);i.value='';
+}
+function cids(){return Array.from(document.querySelectorAll('.ct2 input:checked')).map(c=>c.value);}
+async function fetch2(url){
+  const p='https://api.allorigins.win/raw?url='+encodeURIComponent(url);
+  const r=await fetch(p);
+  if(!r.ok)throw new Error('Erro na requisição');
+  return r.json();
+}
+async function buscar(seg,cidade,key,lim){
+  const q=encodeURIComponent(seg+' '+cidade);
+  const d=await fetch2('https://maps.googleapis.com/maps/api/place/textsearch/json?query='+q+'&language=pt-BR&key='+key);
+  if(d.status==='REQUEST_DENIED')throw new Error('API Key inválida. Verifique se a Places API está ativada no Google Cloud.');
+  if(d.status==='ZERO_RESULTS')return[];
+  return(d.results||[]).slice(0,lim).map(p=>({nome:p.name||'',tel:p.formatted_phone_number||'',cid:cidade.split(' ')[0],end:p.formatted_address||'',av:p.rating?p.rating+' ⭐ ('+( p.user_ratings_total||0)+')':'-',site:p.website||'',pid:p.place_id||''}));
+}
+async function det(pid,key){
+  try{const d=await fetch2('https://maps.googleapis.com/maps/api/place/details/json?place_id='+pid+'&fields=formatted_phone_number,website&language=pt-BR&key='+key);return d.result||{};}catch(e){return{};}
+}
+async function run(){
+  const key=document.getElementById('key').value.trim();
+  const seg=document.getElementById('seg').value;
+  const lim=parseInt(document.getElementById('lim').value);
+  const cids2=cids();
+  if(!key){err('Cole sua API Key.');return;}
+  if(!cids2.length){err('Selecione ao menos uma cidade.');return;}
+  const btn=document.getElementById('bex');
+  const sb=document.getElementById('sb');
+  const stxt=document.getElementById('stxt');
+  document.getElementById('err').classList.remove('on');
+  btn.disabled=true;sb.classList.add('on');R=[];
+  try{
+    for(let i=0;i<cids2.length;i++){
+      const c=cids2[i];
+      stxt.textContent='Buscando '+seg+' em '+c.split(' ')[0]+'... ('+(i+1)+'/'+cids2.length+')';
+      const rs=await buscar(seg,c,key,lim);
+      for(let j=0;j<rs.length;j++){
+        if(!rs[j].tel&&rs[j].pid){
+          stxt.textContent='Detalhes '+(j+1)+'/'+rs.length+' em '+c.split(' ')[0]+'...';
+          const d=await det(rs[j].pid,key);
+          rs[j].tel=d.formatted_phone_number||'';
+          rs[j].site=rs[j].site||d.website||'';
+          await new Promise(r=>setTimeout(r,150));
+        }
+      }
+      R=R.concat(rs);render();
+      await new Promise(r=>setTimeout(r,500));
+    }
+    sb.classList.remove('on');btn.disabled=false;
+    const ct=R.filter(r=>r.tel).length;
+    document.getElementById('sr').style.display='grid';
+    document.getElementById('st').textContent=R.length;
+    document.getElementById('sc').textContent=ct;
+    document.getElementById('ss').textContent=cids2.length;
+  }catch(e){sb.classList.remove('on');btn.disabled=false;err('Erro: '+e.message);}
+}
+function render(){
+  const rc=document.getElementById('rc');rc.classList.add('on');
+  document.getElementById('rc2').textContent=R.length+' leads encontrados';
+  document.getElementById('tb').innerHTML=R.map(r=>'<tr><td class="tn">'+r.nome+'</td><td class="tp">'+(r.tel||'<span style="color:#333">—</span>')+'</td><td style="color:#888">'+r.cid+'</td><td style="color:#666;font-size:12px">'+r.end+'</td><td style="color:#ffaa00;font-size:12px">'+r.av+'</td><td style="font-size:12px">'+(r.site?'<a href="'+r.site+'" target="_blank" style="color:#4488ff">'+r.site.replace('https://','').slice(0,22)+'</a>':'<span style="color:#333">—</span>')+'</td></tr>').join('');
+}
+function csv(){
+  if(!R.length)return;
+  const h=['Nome','Telefone','Cidade','Endereço','Avaliação','Site'];
+  const rows=R.map(r=>['"'+r.nome+'"','"'+r.tel+'"','"'+r.cid+'"','"'+r.end+'"','"'+r.av+'"','"'+r.site+'"']);
+  const c=[h,...rows].map(r=>r.join(',')).join('\n');
+  const b=new Blob(['\ufeff'+c],{type:'text/csv;charset=utf-8;'});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;
+  a.download='leads_'+document.getElementById('seg').value+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+function err(m){const e=document.getElementById('err');e.textContent=m;e.classList.add('on');}
+</script>
+</body>
+</html>
