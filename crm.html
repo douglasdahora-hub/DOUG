@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D.O.U.G. CRM</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
   --bg: #0a0a0f;
@@ -191,6 +192,77 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* VIEW TOGGLE */
+.view-toggle { display: flex; gap: 4px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+.view-btn { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-family: var(--font); cursor: pointer; border: none; background: transparent; color: var(--text2); transition: all 0.2s; font-weight: 500; }
+.view-btn.active { background: var(--green); color: #000; }
+
+/* DASHBOARD */
+.dashboard { display: none; padding: 20px; overflow-y: auto; height: calc(100vh - 116px); position: fixed; top: 116px; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 50; }
+.dashboard.visible { display: block; }
+.layout.dash-mode .sidebar { display: none; }
+.layout.dash-mode .main { display: none; }
+.layout.dash-mode .detail-panel { display: none; }
+.layout.dash-mode { grid-template-columns: 1fr; }
+
+/* KPI ROW */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-row-rates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 12px 12px 0 0;
+}
+.kpi-card.green::before { background: var(--green); box-shadow: 0 0 12px var(--green); }
+.kpi-card.blue::before { background: #42a5f5; box-shadow: 0 0 12px #42a5f5; }
+.kpi-card.yellow::before { background: #ffca28; box-shadow: 0 0 12px #ffca28; }
+.kpi-card.purple::before { background: #ab47bc; box-shadow: 0 0 12px #ab47bc; }
+.kpi-card.orange::before { background: #ffa726; box-shadow: 0 0 12px #ffa726; }
+.kpi-card:hover { border-color: var(--border2); }
+.kpi-label { font-size: 10px; letter-spacing: 2px; color: var(--text3); text-transform: uppercase; font-family: var(--mono); margin-bottom: 8px; }
+.kpi-value { font-size: 32px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+.kpi-card.green .kpi-value { color: var(--green); text-shadow: 0 0 20px rgba(0,200,150,0.5); }
+.kpi-card.blue .kpi-value { color: #42a5f5; text-shadow: 0 0 20px rgba(66,165,245,0.5); }
+.kpi-card.yellow .kpi-value { color: #ffca28; text-shadow: 0 0 20px rgba(255,202,40,0.5); }
+.kpi-card.purple .kpi-value { color: #ab47bc; text-shadow: 0 0 20px rgba(171,71,188,0.5); }
+.kpi-card.orange .kpi-value { color: #ffa726; text-shadow: 0 0 20px rgba(255,167,38,0.5); }
+.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+/* CHARTS GRID */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title { font-size: 11px; letter-spacing: 2px; color: var(--text3); text-transform: uppercase; font-family: var(--mono); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.chart-title::before { content: ''; width: 3px; height: 12px; background: var(--green); border-radius: 2px; box-shadow: 0 0 8px var(--green); }
+.chart-wrap { position: relative; }
+
+/* FUNIL */
+.funil-wrap { display: flex; flex-direction: column; gap: 8px; }
+.funil-stage { display: flex; align-items: center; gap: 12px; }
+.funil-label { font-size: 11px; color: var(--text2); width: 130px; flex-shrink: 0; font-family: var(--mono); }
+.funil-bar-wrap { flex: 1; height: 28px; background: var(--bg4); border-radius: 6px; overflow: hidden; position: relative; }
+.funil-bar { height: 100%; border-radius: 6px; transition: width 1s cubic-bezier(0.4,0,0.2,1); display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; }
+.funil-bar-val { font-size: 11px; font-weight: 600; font-family: var(--mono); color: #000; }
+.funil-pct { font-size: 10px; color: var(--text3); width: 40px; text-align: right; font-family: var(--mono); }
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.kpi-card { animation: fadeInUp 0.4s ease both; }
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.1s; }
+.kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.kpi-card:nth-child(4) { animation-delay: 0.2s; }
+.kpi-card:nth-child(5) { animation-delay: 0.25s; }
+.chart-card { animation: fadeInUp 0.5s ease both; animation-delay: 0.3s; }
 </style>
 </head>
 <body>
@@ -204,6 +276,10 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
     <div class="stat-chip"><span class="label">Quentes</span><span class="value" id="stat-quentes">—</span></div>
     <div class="stat-chip"><span class="label">Fechados</span><span class="value" id="stat-fechados">—</span></div>
     <button class="btn-refresh" onclick="loadLeads()">↻ Atualizar</button>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-view-leads" onclick="setView('leads')">⬛ Leads</button>
+      <button class="view-btn" id="btn-view-dash" onclick="setView('dash')">◈ Dashboard</button>
+    </div>
   </div>
 </div>
 
@@ -234,7 +310,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 </div>
 
 <!-- LAYOUT -->
-<div class="layout">
+<div class="layout" id="main-layout">
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-section">
@@ -652,6 +728,256 @@ updateTimerDisplay();
 updateGoal();
 document.getElementById('meta-input').addEventListener('input', updateGoal);
 loadLeads();
+
+// ── VIEW TOGGLE ──
+function setView(view) {
+  const layout = document.getElementById('main-layout');
+  const dash = document.getElementById('dashboard-panel');
+  const btnLeads = document.getElementById('btn-view-leads');
+  const btnDash = document.getElementById('btn-view-dash');
+  if (view === 'dash') {
+    layout.classList.add('dash-mode');
+    dash.classList.add('visible');
+    btnLeads.classList.remove('active');
+    btnDash.classList.add('active');
+    renderDashboard();
+  } else {
+    layout.classList.remove('dash-mode');
+    dash.classList.remove('visible');
+    btnLeads.classList.add('active');
+    btnDash.classList.remove('active');
+  }
+}
+
+// ── DASHBOARD ──
+let charts = {};
+
+function renderDashboard() {
+  if (!allLeads.length) return;
+
+  // Destroy existing charts
+  Object.values(charts).forEach(c => c && c.destroy());
+  charts = {};
+
+  const leads = allLeads;
+  const total = leads.length;
+
+  // Count by status
+  const bySt = {};
+  leads.forEach(l => { const s = l.Status||'Novo'; bySt[s]=(bySt[s]||0)+1; });
+
+  // Prospectados = quem tem Ultima Atualizacao preenchida
+  const prospectados = leads.filter(l => l['Ultima Atualizacao'] && String(l['Ultima Atualizacao']).trim() !== '').length;
+
+  // Funil groups
+  const meio = (bySt['Em conversa']||0) + (bySt['Follow up 24h']||0) + (bySt['Follow up 3d']||0);
+  const quente = (bySt['Cliente Quente']||0);
+  const demo = (bySt['Demo agendada']||0) + (bySt['Passou ao Responsavel']||0);
+  const fechado = (bySt['Fechado']||0);
+  const engajados = meio + quente + demo + fechado;
+  const aguardando = bySt['Aguardando'] || 0;
+  // Responderam = prospectados que não estão apenas aguardando
+  const responderam = prospectados - aguardando;
+
+  const taxa1 = prospectados > 0 ? Math.round((engajados / prospectados) * 100) : 0;
+  const taxa2 = responderam > 0 ? Math.round((engajados / responderam) * 100) : 0;
+  const taxaConv = prospectados > 0 ? Math.round((fechado / prospectados) * 100) : 0;
+
+  // KPIs
+  document.getElementById('kpi-total').textContent = prospectados;
+  document.getElementById('kpi-engajados').textContent = engajados;
+  document.getElementById('kpi-demo').textContent = demo;
+  document.getElementById('kpi-fechados').textContent = fechado;
+  document.getElementById('kpi-taxa1').textContent = taxa1 + '%';
+  document.getElementById('kpi-taxa2').textContent = taxa2 + '%';
+  document.getElementById('kpi-conv').textContent = taxaConv + '%';
+
+  // Funil
+  const funilStages = [
+    { label: 'Prospectados', val: prospectados, color: '#42a5f5' },
+    { label: 'Engajados', val: engajados, color: '#7986cb' },
+    { label: 'Clientes Quentes', val: quente, color: '#ffca28' },
+    { label: 'Demo / Reunião', val: demo, color: '#ab47bc' },
+    { label: 'Fechados', val: fechado, color: '#00c896' },
+  ];
+  const maxVal = Math.max(...funilStages.map(s => s.val), 1);
+  const funilWrap = document.getElementById('funil-wrap');
+  funilWrap.innerHTML = funilStages.map(s => {
+    const pct = Math.round((s.val / maxVal) * 100);
+    const relPct = total > 0 ? Math.round((s.val / total) * 100) : 0;
+    return `<div class="funil-stage">
+      <div class="funil-label">${s.label}</div>
+      <div class="funil-bar-wrap">
+        <div class="funil-bar" style="width:${pct}%;background:linear-gradient(90deg,${s.color}88,${s.color});box-shadow:0 0 12px ${s.color}66">
+          <span class="funil-bar-val">${s.val}</span>
+        </div>
+      </div>
+      <div class="funil-pct">${relPct}%</div>
+    </div>`;
+  }).join('');
+
+  // Chart: Por Status (bar)
+  const statusOrder = ['Novo','Aguardando','Em conversa','Follow up 24h','Follow up 3d','Cliente Quente','Demo agendada','Passou ao Responsavel','Fechado','Sem interesse','Arquivado'];
+  const stLabels = statusOrder.filter(s => bySt[s] > 0);
+  const stVals = stLabels.map(s => bySt[s]||0);
+  const stColors = {
+    'Novo':'#4caf50','Aguardando':'#42a5f5','Em conversa':'#7986cb',
+    'Follow up 24h':'#ffa726','Follow up 3d':'#ffb300','Cliente Quente':'#ffca28',
+    'Demo agendada':'#ab47bc','Passou ao Responsavel':'#7e57c2',
+    'Fechado':'#00c896','Sem interesse':'#ef5350','Arquivado':'#78909c'
+  };
+  const stBg = stLabels.map(s => (stColors[s]||'#9090a8') + '33');
+  const stBorder = stLabels.map(s => stColors[s]||'#9090a8');
+
+  const ctxSt = document.getElementById('chart-status').getContext('2d');
+  charts.status = new Chart(ctxSt, {
+    type: 'bar',
+    data: { labels: stLabels, datasets: [{ data: stVals, backgroundColor: stBg, borderColor: stBorder, borderWidth: 2, borderRadius: 6, hoverBackgroundColor: stBorder }] },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5a5a70', font: { family: 'JetBrains Mono', size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5a5a70', font: { family: 'JetBrains Mono', size: 10 } } }
+      },
+      animation: { duration: 800, easing: 'easeOutQuart' }
+    }
+  });
+
+  // Chart: Por Cidade (horizontal bar)
+  const byCity = {};
+  const byCtFechado = {};
+  leads.forEach(l => {
+    const c = l.Cidade||'Desconhecida';
+    byCity[c] = (byCity[c]||0) + 1;
+    if (l.Status === 'Fechado') byCtFechado[c] = (byCtFechado[c]||0) + 1;
+  });
+  const cityEntries = Object.entries(byCity).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const cityLabels = cityEntries.map(e=>e[0]);
+  const cityVals = cityEntries.map(e=>e[1]);
+  const cityFechados = cityLabels.map(c => byCtFechado[c]||0);
+
+  const ctxCity = document.getElementById('chart-cidade').getContext('2d');
+  charts.cidade = new Chart(ctxCity, {
+    type: 'bar',
+    data: {
+      labels: cityLabels,
+      datasets: [
+        { label: 'Total', data: cityVals, backgroundColor: 'rgba(66,165,245,0.2)', borderColor: '#42a5f5', borderWidth: 2, borderRadius: 4 },
+        { label: 'Fechados', data: cityFechados, backgroundColor: 'rgba(0,200,150,0.4)', borderColor: '#00c896', borderWidth: 2, borderRadius: 4 }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#9090a8', font: { family: 'JetBrains Mono', size: 10 } } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5a5a70', font: { family: 'JetBrains Mono', size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9090a8', font: { family: 'JetBrains Mono', size: 10 } } }
+      },
+      animation: { duration: 800, easing: 'easeOutQuart' }
+    }
+  });
+
+  // Chart: Pizza por Nicho
+  const byNicho = {};
+  leads.forEach(l => { const n = l.Nicho||'Outros'; byNicho[n]=(byNicho[n]||0)+1; });
+  const nichoEntries = Object.entries(byNicho).sort((a,b)=>b[1]-a[1]);
+  const nichoColors = ['#00c896','#42a5f5','#ab47bc','#ffca28','#ffa726','#ef5350','#7986cb','#26c6da'];
+
+  const ctxNicho = document.getElementById('chart-nicho').getContext('2d');
+  charts.nicho = new Chart(ctxNicho, {
+    type: 'pie',
+    data: {
+      labels: nichoEntries.map(e=>e[0]),
+      datasets: [{
+        data: nichoEntries.map(e=>e[1]),
+        backgroundColor: nichoColors.map(c => c+'44'),
+        borderColor: nichoColors,
+        borderWidth: 2,
+        hoverBorderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#9090a8', font: { family: 'JetBrains Mono', size: 10 }, padding: 12, boxWidth: 10 } }
+      },
+      animation: { duration: 800, easing: 'easeOutQuart' }
+    }
+  });
+}
 </script>
+<!-- DASHBOARD PANEL -->
+<div class="dashboard" id="dashboard-panel">
+  <div class="kpi-row">
+    <div class="kpi-card green">
+      <div class="kpi-label">Prospectados</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-sub">com contato realizado</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Engajados</div>
+      <div class="kpi-value" id="kpi-engajados">—</div>
+      <div class="kpi-sub">em conversa / follow up</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Demo / Reunião</div>
+      <div class="kpi-value" id="kpi-demo">—</div>
+      <div class="kpi-sub">próximo do fechamento</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Fechados</div>
+      <div class="kpi-value" id="kpi-fechados">—</div>
+      <div class="kpi-sub">clientes ativos</div>
+    </div>
+  </div>
+
+  <div class="kpi-row-rates">
+    <div class="kpi-card orange">
+      <div class="kpi-label">Interesse / Prospectado</div>
+      <div class="kpi-value" id="kpi-taxa1">—</div>
+      <div class="kpi-sub">engajados ÷ prospectados</div>
+    </div>
+    <div class="kpi-card" style="border-top:2px solid #26c6da">
+      <div class="kpi-label">Interesse / Responderam</div>
+      <div class="kpi-value" id="kpi-taxa2" style="color:#26c6da;text-shadow:0 0 20px rgba(38,198,218,0.5)">—</div>
+      <div class="kpi-sub">exclui quem ainda aguarda</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Taxa de Conversão</div>
+      <div class="kpi-value" id="kpi-conv">—</div>
+      <div class="kpi-sub">fechados ÷ prospectados</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card full">
+      <div class="chart-title">Funil de Conversão</div>
+      <div class="funil-wrap" id="funil-wrap"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Pipeline por Status</div>
+      <div class="chart-wrap">
+        <canvas id="chart-status" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Por Nicho</div>
+      <div class="chart-wrap">
+        <canvas id="chart-nicho" height="160"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card full" style="height:320px">
+      <div class="chart-title">Leads por Cidade</div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="chart-cidade"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
