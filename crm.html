@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D.O.U.G. CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #1a1a24;
+  --bg4: #22222e;
+  --green: #00c896;
+  --green2: #00a87e;
+  --green-dim: rgba(0,200,150,0.08);
+  --green-border: rgba(0,200,150,0.2);
+  --text: #e8e8f0;
+  --text2: #9090a8;
+  --text3: #5a5a70;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --radius: 10px;
+  --font: 'Space Grotesk', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+}
+.topbar-logo {
+  font-family: var(--mono);
+  font-size: 13px; font-weight: 500;
+  color: var(--green);
+  letter-spacing: 2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.topbar-logo::before {
+  content: '';
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.topbar-title { font-size: 14px; color: var(--text2); margin-left: 4px; }
+
+.topbar-stats {
+  margin-left: auto;
+  display: flex; gap: 24px; align-items: center;
+}
+.stat-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px;
+}
+.stat-chip .label { color: var(--text3); }
+.stat-chip .value { color: var(--green); font-weight: 500; }
+
+.btn-refresh {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-refresh:hover { background: rgba(0,200,150,0.15); }
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 360px;
+  min-height: 100vh;
+  padding-top: 56px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  position: sticky; top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.sidebar-section { margin-bottom: 24px; }
+.sidebar-label {
+  font-family: var(--mono);
+  font-size: 10px; letter-spacing: 2px;
+  color: var(--text3);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.search-box {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box:focus { border-color: var(--green-border); }
+.search-box::placeholder { color: var(--text3); }
+
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+
+.filter-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12px;
+  color: var(--text2);
+  border: 1px solid transparent;
+}
+.filter-btn:hover { background: var(--bg3); color: var(--text); }
+.filter-btn.active {
+  background: var(--green-dim);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+.filter-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.filter-name { flex: 1; margin-left: 8px; }
+.filter-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  background: var(--bg4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text3);
+}
+.filter-btn.active .filter-count { background: rgba(0,200,150,0.15); color: var(--green); }
+
+/* ── MAIN ── */
+.main {
+  padding: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 56px);
+}
+
+.main-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.main-header h2 { font-size: 15px; font-weight: 500; color: var(--text); }
+.leads-count { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+.leads-grid { display: flex; flex-direction: column; gap: 6px; }
+
+.lead-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.lead-card:hover {
+  border-color: var(--border2);
+  background: var(--bg3);
+  transform: translateX(2px);
+}
+.lead-card.selected {
+  border-color: var(--green-border);
+  background: var(--green-dim);
+}
+
+.lead-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.lead-meta {
+  display: flex; gap: 10px; align-items: center;
+  font-size: 11px; color: var(--text3);
+}
+.lead-city { font-family: var(--mono); }
+.lead-nicho { 
+  background: var(--bg4);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.status-badge {
+  font-size: 10px; font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.lead-phone { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── DETAIL PANEL ── */
+.detail-panel {
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  padding: 24px 20px;
+  position: sticky; top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.detail-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100%;
+  color: var(--text3);
+  text-align: center; gap: 12px;
+}
+.detail-empty-icon { font-size: 32px; opacity: 0.3; }
+.detail-empty p { font-size: 13px; }
+
+.detail-name { font-size: 18px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.detail-nicho { font-size: 12px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.detail-field {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.detail-field.full { grid-column: 1 / -1; }
+.detail-field-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase; font-family: var(--mono); }
+.detail-field-value { font-size: 13px; color: var(--text); }
+
+.detail-divider { height: 1px; background: var(--border); }
+
+.detail-section-title {
+  font-size: 11px; letter-spacing: 2px;
+  color: var(--text3); text-transform: uppercase;
+  font-family: var(--mono);
+  margin-bottom: 10px;
+}
+
+.status-select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+.status-select:focus { border-color: var(--green-border); }
+
+.obs-textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+}
+.obs-textarea:focus { border-color: var(--green-border); }
+.obs-textarea::placeholder { color: var(--text3); }
+
+.btn-save {
+  width: 100%;
+  background: var(--green);
+  color: #000;
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 11px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.btn-save:hover { background: var(--green2); transform: translateY(-1px); }
+.btn-save:active { transform: translateY(0); }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.save-msg {
+  text-align: center;
+  font-size: 12px;
+  padding: 6px;
+  border-radius: 6px;
+  display: none;
+}
+.save-msg.success { background: rgba(0,200,150,0.1); color: var(--green); display: block; }
+.save-msg.error { background: rgba(255,80,80,0.1); color: #ff5050; display: block; }
+
+/* ── STATUS COLORS ── */
+.s-novo { background: #e8f5e920; color: #4caf50; border: 1px solid #4caf5030; }
+.s-aguardando { background: #e3f2fd20; color: #42a5f5; border: 1px solid #42a5f530; }
+.s-followup24 { background: #fff3e020; color: #ffa726; border: 1px solid #ffa72630; }
+.s-followup3d { background: #fff8e120; color: #ffb300; border: 1px solid #ffb30030; }
+.s-conversa { background: #e8eaf620; color: #7986cb; border: 1px solid #7986cb30; }
+.s-demo { background: #f3e5f520; color: #ab47bc; border: 1px solid #ab47bc30; }
+.s-seminteresse { background: #ffebee20; color: #ef5350; border: 1px solid #ef535030; }
+.s-arquivado { background: #eceff120; color: #78909c; border: 1px solid #78909c30; }
+.s-fechado { background: #e8f5e920; color: #00c896; border: 1px solid #00c89630; }
+.s-testando { background: #e0f7fa20; color: #26c6da; border: 1px solid #26c6da30; }
+.s-semwpp { background: #fbe9e720; color: #ff7043; border: 1px solid #ff704330; }
+.s-quente { background: #fff9c420; color: #ffca28; border: 1px solid #ffca2830; }
+.s-responsavel { background: #ede7f620; color: #7e57c2; border: 1px solid #7e57c230; }
+.s-outro { background: #f5f5f520; color: #9e9e9e; border: 1px solid #9e9e9e30; }
+
+/* ── LOADING ── */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 200px; color: var(--text3); flex-direction: column; gap: 12px;
+}
+.loading-spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">D.O.U.G.</div>
+  <span class="topbar-title">CRM de Prospecção</span>
+  <div class="topbar-stats">
+    <div class="stat-chip"><span class="label">Total</span><span class="value" id="stat-total">—</span></div>
+    <div class="stat-chip"><span class="label">Quentes</span><span class="value" id="stat-quentes">—</span></div>
+    <div class="stat-chip"><span class="label">Fechados</span><span class="value" id="stat-fechados">—</span></div>
+    <button class="btn-refresh" onclick="loadLeads()">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Buscar</div>
+      <input class="search-box" type="text" placeholder="Nome, telefone, cidade..." id="search-input" oninput="filterLeads()">
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Status</div>
+      <div class="filter-group" id="status-filters">
+        <div class="filter-btn active" data-status="todos" onclick="setStatusFilter('todos', this)">
+          <div class="filter-dot" style="background:#9090a8"></div>
+          <span class="filter-name">Todos</span>
+          <span class="filter-count" id="count-todos">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Cidade</div>
+      <div class="filter-group" id="city-filters"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="main-header">
+      <h2>Leads</h2>
+      <span class="leads-count" id="leads-count">carregando...</span>
+    </div>
+    <div class="leads-grid" id="leads-grid">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <span>Carregando leads...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-empty">
+      <div class="detail-empty-icon">◎</div>
+      <p>Selecione um lead para ver os detalhes</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbxkU1uTaynJdaFNkQkDyAnCt7GO-9-88GO7KE9R_qCbGd24fCq5F0l4tuqFDCOlMOn3/exec';
+
+const STATUS_CONFIG = {
+  'Novo':                  { cls: 's-novo',        dot: '#4caf50' },
+  'Aguardando':            { cls: 's-aguardando',  dot: '#42a5f5' },
+  'Follow up 24h':         { cls: 's-followup24',  dot: '#ffa726' },
+  'Follow up 3d':          { cls: 's-followup3d',  dot: '#ffb300' },
+  'Em conversa':           { cls: 's-conversa',    dot: '#7986cb' },
+  'Demo agendada':         { cls: 's-demo',        dot: '#ab47bc' },
+  'Sem interesse':         { cls: 's-seminteresse',dot: '#ef5350' },
+  'Arquivado':             { cls: 's-arquivado',   dot: '#78909c' },
+  'Fechado':               { cls: 's-fechado',     dot: '#00c896' },
+  'Testando':              { cls: 's-testando',    dot: '#26c6da' },
+  'Nao tem WhatsApp':      { cls: 's-semwpp',      dot: '#ff7043' },
+  'Cliente Quente':        { cls: 's-quente',      dot: '#ffca28' },
+  'Passou ao Responsavel': { cls: 's-responsavel', dot: '#7e57c2' },
+  'Outro Momento':         { cls: 's-outro',       dot: '#9e9e9e' },
+};
+
+let allLeads = [];
+let filteredLeads = [];
+let selectedLead = null;
+let activeStatus = 'todos';
+let activeCity = 'todas';
+
+async function loadLeads() {
+  document.getElementById('leads-grid').innerHTML = '<div class="loading"><div class="loading-spinner"></div><span>Carregando...</span></div>';
+  try {
+    const res = await fetch(API_URL + '?action=getLeads');
+    const data = await res.json();
+    allLeads = data.leads || [];
+    updateStats();
+    buildFilters();
+    filterLeads();
+  } catch(e) {
+    document.getElementById('leads-grid').innerHTML = '<div class="loading"><span style="color:#ef5350">Erro ao carregar. Verifique a URL da API.</span></div>';
+  }
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = allLeads.length;
+  document.getElementById('stat-quentes').textContent = allLeads.filter(l => l.Status === 'Cliente Quente').length;
+  document.getElementById('stat-fechados').textContent = allLeads.filter(l => l.Status === 'Fechado').length;
+}
+
+function buildFilters() {
+  // Status counts
+  const statusCounts = {};
+  allLeads.forEach(l => {
+    const s = l.Status || 'Novo';
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+
+  const sf = document.getElementById('status-filters');
+  sf.innerHTML = `
+    <div class="filter-btn active" data-status="todos" onclick="setStatusFilter('todos', this)">
+      <div class="filter-dot" style="background:#9090a8"></div>
+      <span class="filter-name">Todos</span>
+      <span class="filter-count" id="count-todos">${allLeads.length}</span>
+    </div>
+  `;
+  Object.entries(statusCounts).sort((a,b) => b[1]-a[1]).forEach(([status, count]) => {
+    const cfg = STATUS_CONFIG[status] || { dot: '#9090a8' };
+    sf.innerHTML += `
+      <div class="filter-btn" data-status="${status}" onclick="setStatusFilter('${status}', this)">
+        <div class="filter-dot" style="background:${cfg.dot}"></div>
+        <span class="filter-name">${status}</span>
+        <span class="filter-count">${count}</span>
+      </div>
+    `;
+  });
+
+  // Cities
+  const cities = [...new Set(allLeads.map(l => l.Cidade).filter(Boolean))].sort();
+  const cf = document.getElementById('city-filters');
+  cf.innerHTML = `
+    <div class="filter-btn active" data-city="todas" onclick="setCityFilter('todas', this)">
+      <div class="filter-dot" style="background:#9090a8"></div>
+      <span class="filter-name">Todas</span>
+      <span class="filter-count">${allLeads.length}</span>
+    </div>
+  `;
+  cities.forEach(city => {
+    const count = allLeads.filter(l => l.Cidade === city).length;
+    cf.innerHTML += `
+      <div class="filter-btn" data-city="${city}" onclick="setCityFilter('${city}', this)">
+        <div class="filter-dot" style="background:#5a5a70"></div>
+        <span class="filter-name">${city}</span>
+        <span class="filter-count">${count}</span>
+      </div>
+    `;
+  });
+}
+
+function setStatusFilter(status, el) {
+  activeStatus = status;
+  document.querySelectorAll('#status-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  filterLeads();
+}
+
+function setCityFilter(city, el) {
+  activeCity = city;
+  document.querySelectorAll('#city-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  filterLeads();
+}
+
+function filterLeads() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  filteredLeads = allLeads.filter(l => {
+    const matchStatus = activeStatus === 'todos' || l.Status === activeStatus;
+    const matchCity = activeCity === 'todas' || l.Cidade === activeCity;
+    const matchSearch = !q || 
+      (l.Nome || '').toLowerCase().includes(q) ||
+      (l.Telefone || '').toLowerCase().includes(q) ||
+      (l.Cidade || '').toLowerCase().includes(q);
+    return matchStatus && matchCity && matchSearch;
+  });
+  renderLeads();
+}
+
+function renderLeads() {
+  const grid = document.getElementById('leads-grid');
+  document.getElementById('leads-count').textContent = `${filteredLeads.length} leads`;
+  
+  if (!filteredLeads.length) {
+    grid.innerHTML = '<div class="loading"><span>Nenhum lead encontrado</span></div>';
+    return;
+  }
+
+  grid.innerHTML = filteredLeads.map(lead => {
+    const status = lead.Status || 'Novo';
+    const cfg = STATUS_CONFIG[status] || { cls: 's-novo', dot: '#4caf50' };
+    const phone = (lead.Telefone || '').replace("'", '');
+    const selected = selectedLead && selectedLead._row === lead._row ? 'selected' : '';
+    return `
+      <div class="lead-card ${selected}" onclick="selectLead(${lead._row})">
+        <div>
+          <div class="lead-name">${lead.Nome || '—'}</div>
+          <div class="lead-meta">
+            <span class="lead-city">${lead.Cidade || ''}</span>
+            <span class="lead-nicho">${lead.Nicho || ''}</span>
+          </div>
+          <div class="lead-phone">${phone}</div>
+        </div>
+        <div>
+          <span class="status-badge ${cfg.cls}">${status}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectLead(row) {
+  selectedLead = allLeads.find(l => l._row === row);
+  if (!selectedLead) return;
+  renderLeads();
+  renderDetail();
+}
+
+function renderDetail() {
+  if (!selectedLead) return;
+  const l = selectedLead;
+  const phone = (l.Telefone || '').replace("'", '');
+  const status = l.Status || 'Novo';
+  const statusOptions = Object.keys(STATUS_CONFIG).map(s => 
+    `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`
+  ).join('');
+
+  document.getElementById('detail-panel').innerHTML = `
+    <div>
+      <div class="detail-name">${l.Nome || '—'}</div>
+      <div class="detail-nicho">${l.Nicho || ''} · ${l.Cidade || ''}</div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-field">
+        <div class="detail-field-label">Telefone</div>
+        <div class="detail-field-value" style="display:flex;align-items:center;gap:8px">
+  ${phone}
+  <button onclick="navigator.clipboard.writeText('${phone}').then(()=>this.textContent='✓').then(()=>setTimeout(()=>this.textContent='⎘',1500))" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px">⎘</button>
+</div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Avaliações</div>
+        <div class="detail-field-value">★ ${l['Total Avaliacoes'] || l.Avaliacoes || '—'}</div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Canal</div>
+        <div class="detail-field-value">${l.Canal || '—'}</div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Última atualização</div>
+        <div class="detail-field-value" style="font-size:11px">${l['Ultima Atualizacao'] || '—'}</div>
+      </div>
+      ${l.Website ? `<div class="detail-field full"><div class="detail-field-label">Website</div><div class="detail-field-value" style="font-size:11px;word-break:break-all">${l.Website}</div></div>` : ''}
+    </div>
+
+    <div class="detail-divider"></div>
+
+    <div>
+      <div class="detail-section-title">Atualizar Lead</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <select class="status-select" id="edit-status">${statusOptions}</select>
+        <textarea class="obs-textarea" id="edit-obs" placeholder="Observações sobre este lead...">${l.Observacao || ''}</textarea>
+        <button class="btn-save" onclick="saveLead()" id="btn-save">Salvar alterações</button>
+        <div class="save-msg" id="save-msg"></div>
+      </div>
+    </div>
+  `;
+}
+
+async function saveLead() {
+  if (!selectedLead) return;
+  const btn = document.getElementById('btn-save');
+  const msg = document.getElementById('save-msg');
+  const status = document.getElementById('edit-status').value;
+  const obs = document.getElementById('edit-obs').value;
+  
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  msg.className = 'save-msg';
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'updateLead',
+        row: selectedLead._row,
+        status: status,
+        observacao: obs
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      selectedLead.Status = status;
+      selectedLead.Observacao = obs;
+      // Update in allLeads
+      const idx = allLeads.findIndex(l => l._row === selectedLead._row);
+      if (idx !== -1) { allLeads[idx].Status = status; allLeads[idx].Observacao = obs; }
+      msg.textContent = '✓ Salvo com sucesso!';
+      msg.className = 'save-msg success';
+      updateStats();
+      buildFilters();
+      filterLeads();
+    } else {
+      throw new Error('Falha ao salvar');
+    }
+  } catch(e) {
+    msg.textContent = '✗ Erro ao salvar. Tente novamente.';
+    msg.className = 'save-msg error';
+  }
+  
+  btn.disabled = false;
+  btn.textContent = 'Salvar alterações';
+  setTimeout(() => { msg.className = 'save-msg'; }, 3000);
+}
+
+loadLeads();
+</script>
+</body>
+</html>
