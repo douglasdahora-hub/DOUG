@@ -156,6 +156,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .save-msg.success { background: rgba(0,200,150,0.1); color: var(--green); display: block; }
 .save-msg.error { background: rgba(255,80,80,0.1); color: #ff5050; display: block; }
 
+.btn-delete { width: 100%; background: transparent; border: 1px solid rgba(239,83,80,0.3); color: #ef5350; font-family: var(--font); font-size: 12px; padding: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+.btn-delete:hover { background: rgba(239,83,80,0.1); border-color: #ef5350; }
+
+.lead-date { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 2px; }
+
 /* MESSAGE BOX */
 .msg-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 .msg-header { display: flex; gap: 8px; }
@@ -473,9 +478,19 @@ function timerTick() {
     } catch(e) {}
 
     sessionSent++;
+    updateGoal();
+    
+    // MANUAL MODE - stop and wait for user to press play
+    timerPause();
     timerRoundIdx = (timerRoundIdx + 1) % INTERVALS.length;
     timerSeconds = INTERVALS[timerRoundIdx];
-    updateGoal();
+    updateTimerDisplay();
+    
+    // Flash the start button to signal it's ready
+    const btn = document.getElementById('btn-start');
+    btn.style.animation = 'pulse 0.5s ease 3';
+    setTimeout(() => btn.style.animation = '', 1500);
+    return;
   }
   updateTimerDisplay();
 }
@@ -505,6 +520,26 @@ function updateGoal() {
   const pct = Math.min(100, Math.round((sessionSent / meta) * 100));
   document.getElementById('goal-pct').textContent = pct + '%';
   document.getElementById('goal-abs').textContent = sessionSent + '/' + meta;
+}
+
+// ── DATE FORMAT ──
+function formatDate(val) {
+  if (!val || val === '' || val === '—') return '—';
+  const s = String(val).trim();
+  // Already in BR format DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return s.substring(0, 16);
+  // ISO format
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const d = new Date(s);
+    const brasilia = new Date(d.getTime() - (3 * 60 * 60 * 1000));
+    const dia = String(brasilia.getUTCDate()).padStart(2,'0');
+    const mes = String(brasilia.getUTCMonth()+1).padStart(2,'0');
+    const ano = brasilia.getUTCFullYear();
+    const hora = String(brasilia.getUTCHours()).padStart(2,'0');
+    const min = String(brasilia.getUTCMinutes()).padStart(2,'0');
+    return `${dia}/${mes}/${ano} ${hora}:${min}`;
+  }
+  return s.substring(0, 16);
 }
 
 // ── LEADS ──
@@ -560,6 +595,15 @@ function filterLeads() {
     const mq = !q||(l.Nome||'').toLowerCase().includes(q)||(l.Telefone||'').toLowerCase().includes(q)||(l.Cidade||'').toLowerCase().includes(q);
     return ms&&mc&&mq;
   });
+  // Sort by date - oldest first (empty dates go to end)
+  filteredLeads.sort((a, b) => {
+    const da = a['Ultima Atualizacao'] || '';
+    const db = b['Ultima Atualizacao'] || '';
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return String(da).localeCompare(String(db));
+  });
   renderLeads();
 }
 
@@ -577,6 +621,7 @@ function renderLeads() {
         <div class="lead-name">${lead.Nome||'—'}</div>
         <div class="lead-meta"><span class="lead-city">${lead.Cidade||''}</span><span class="lead-nicho">${lead.Nicho||''}</span></div>
         <div class="lead-phone">${phone}</div>
+        <div class="lead-date">${formatDate(lead['Ultima Atualizacao'])}</div>
       </div>
       <span class="status-badge ${cfg.cls}">${s}</span>
     </div>`;
@@ -618,7 +663,7 @@ function renderDetail() {
       </div>
       <div class="detail-field">
         <div class="detail-field-label">Última atualização</div>
-        <div class="detail-field-value" style="font-size:11px">${l['Ultima Atualizacao']||'—'}</div>
+        <div class="detail-field-value" style="font-size:11px">${formatDate(l['Ultima Atualizacao'])}</div>
       </div>
       ${l.Website?`<div class="detail-field full"><div class="detail-field-label">Website</div><div class="detail-field-value" style="font-size:11px;word-break:break-all">${l.Website}</div></div>`:''}
     </div>
@@ -637,6 +682,7 @@ function renderDetail() {
         </select>
         <textarea class="obs-textarea" id="edit-obs" placeholder="Observações...">${l.Observacao||''}</textarea>
         <button class="btn-save" onclick="saveLead()" id="btn-save">Salvar alterações</button>
+        <button class="btn-delete" onclick="deleteLead()">🗑 Excluir lead</button>
         <div class="save-msg" id="save-msg"></div>
       </div>
     </div>
@@ -697,6 +743,28 @@ function copyText(text, btn) {
   });
 }
 
+async function deleteLead() {
+  if (!selectedLead) return;
+  if (!confirm(`Excluir "${selectedLead.Nome}"? Esta ação não pode ser desfeita.`)) return;
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'deleteLead', row: selectedLead._row })
+    });
+    const data = await res.json();
+    if (data.success) {
+      allLeads = allLeads.filter(l => l._row !== selectedLead._row);
+      selectedLead = null;
+      document.getElementById('detail-panel').innerHTML = `<div class="detail-empty"><div class="detail-empty-icon">◎</div><p>Lead excluído com sucesso</p></div>`;
+      updateStats();
+      buildFilters();
+      filterLeads();
+    }
+  } catch(e) {
+    alert('Erro ao excluir. Tente novamente.');
+  }
+}
+
 async function saveLead() {
   if (!selectedLead) return;
   const btn = document.getElementById('btn-save');
@@ -713,10 +781,14 @@ async function saveLead() {
     const data = await res.json();
     if (data.success) {
       selectedLead.Status = status; selectedLead.Canal = canal; selectedLead.Observacao = obs;
+      if (data.ultimaAtualizacao) selectedLead['Ultima Atualizacao'] = data.ultimaAtualizacao;
       const idx = allLeads.findIndex(l=>l._row===selectedLead._row);
-      if (idx!==-1) { allLeads[idx].Status=status; allLeads[idx].Canal=canal; allLeads[idx].Observacao=obs; }
+      if (idx!==-1) { allLeads[idx].Status=status; allLeads[idx].Canal=canal; allLeads[idx].Observacao=obs; if (data.ultimaAtualizacao) allLeads[idx]['Ultima Atualizacao']=data.ultimaAtualizacao; }
       msg.textContent='✓ Salvo!'; msg.className='save-msg success';
       updateStats(); buildFilters(); filterLeads();
+      // Update date in detail panel
+      const dateEl = document.querySelector('.detail-field-value[style*="font-size:11px"]');
+      if (dateEl && data.ultimaAtualizacao) dateEl.textContent = data.ultimaAtualizacao;
     } else throw new Error();
   } catch(e) { msg.textContent='✗ Erro ao salvar.'; msg.className='save-msg error'; }
   btn.disabled=false; btn.textContent='Salvar alterações';
