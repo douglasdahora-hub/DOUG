@@ -251,7 +251,30 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .chart-title::before { content: ''; width: 3px; height: 12px; background: var(--green); border-radius: 2px; box-shadow: 0 0 8px var(--green); }
 .chart-wrap { position: relative; }
 
-/* FUNIL */
+/* PRODUCTIVITY */
+.prod-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.prod-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+.prod-title { font-size: 10px; letter-spacing: 2px; color: var(--text3); text-transform: uppercase; font-family: var(--mono); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.prod-title::before { content: ''; width: 3px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.prod-card.daily .prod-title::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.prod-card.total .prod-title::before { background: #42a5f5; box-shadow: 0 0 6px #42a5f5; }
+.prod-numbers { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.prod-current { font-size: 42px; font-weight: 700; font-family: var(--mono); }
+.prod-card.daily .prod-current { color: var(--green); text-shadow: 0 0 20px rgba(0,200,150,0.4); }
+.prod-card.total .prod-current { color: #42a5f5; text-shadow: 0 0 20px rgba(66,165,245,0.4); }
+.prod-meta { font-size: 13px; color: var(--text3); }
+.prod-pct { font-size: 18px; font-weight: 600; font-family: var(--mono); }
+.prod-sub { font-size: 11px; color: var(--text3); margin-bottom: 14px; font-family: var(--mono); }
+.prod-bar-wrap { height: 8px; background: var(--bg4); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+.prod-bar { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+.prod-bar.green { background: linear-gradient(90deg, #00a87e, var(--green)); box-shadow: 0 0 8px rgba(0,200,150,0.4); }
+.prod-bar.yellow { background: linear-gradient(90deg, #e65100, #ffa726); box-shadow: 0 0 8px rgba(255,167,38,0.4); }
+.prod-bar.red { background: linear-gradient(90deg, #b71c1c, #ef5350); box-shadow: 0 0 8px rgba(239,83,80,0.4); }
+.prod-status { font-size: 10px; font-family: var(--mono); letter-spacing: 1px; }
+.prod-status.green { color: var(--green); }
+.prod-status.yellow { color: #ffa726; }
+.prod-status.red { color: #ef5350; }
+.prod-deadline { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 4px; }
 .funil-wrap { display: flex; flex-direction: column; gap: 8px; }
 .funil-stage { display: flex; align-items: center; gap: 12px; }
 .funil-label { font-size: 11px; color: var(--text2); width: 130px; flex-shrink: 0; font-family: var(--mono); }
@@ -478,6 +501,7 @@ function timerTick() {
     } catch(e) {}
 
     sessionSent++;
+    saveEnviadosHoje(getEnviadosHoje() + 1);
     updateGoal();
     
     // MANUAL MODE - stop and wait for user to press play
@@ -798,8 +822,94 @@ async function saveLead() {
 // ── INIT ──
 updateTimerDisplay();
 updateGoal();
+sessionSent = getEnviadosHoje();
 document.getElementById('meta-input').addEventListener('input', updateGoal);
 loadLeads();
+
+// ── PRODUCTIVITY TRACKING ──
+const META_DIARIA = 50;
+const META_GERAL = 1200;
+const META_DATA = new Date('2026-06-10T23:59:59-03:00');
+
+function getTodayKey() {
+  const d = new Date();
+  return `doug_enviados_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+}
+
+function getEnviadosHoje() {
+  const key = getTodayKey();
+  return parseInt(localStorage.getItem(key) || '0');
+}
+
+function saveEnviadosHoje(n) {
+  const key = getTodayKey();
+  localStorage.setItem(key, String(n));
+}
+
+function updateProdDash(prospectadosTotal) {
+  const hoje = getEnviadosHoje();
+  const pctHoje = Math.min(100, Math.round((hoje / META_DIARIA) * 100));
+  
+  document.getElementById('prod-hoje').textContent = hoje;
+  document.getElementById('prod-hoje-pct').textContent = pctHoje + '%';
+  
+  const faltamHoje = Math.max(0, META_DIARIA - hoje);
+  if (hoje >= META_DIARIA) {
+    document.getElementById('prod-hoje-faltam').textContent = '✓ Meta diária batida!';
+  } else {
+    document.getElementById('prod-hoje-faltam').textContent = `Faltam ${faltamHoje} envios para bater a meta`;
+  }
+  
+  const barHoje = document.getElementById('prod-hoje-bar');
+  barHoje.style.width = pctHoje + '%';
+  const statusHoje = document.getElementById('prod-hoje-status');
+  if (pctHoje >= 100) {
+    barHoje.className = 'prod-bar green';
+    statusHoje.textContent = '◉ META BATIDA'; statusHoje.className = 'prod-status green';
+  } else if (pctHoje >= 50) {
+    barHoje.className = 'prod-bar yellow';
+    statusHoje.textContent = '◉ EM PROGRESSO'; statusHoje.className = 'prod-status yellow';
+  } else {
+    barHoje.className = 'prod-bar red';
+    statusHoje.textContent = hoje === 0 ? '◉ AGUARDANDO INÍCIO' : '◉ ABAIXO DA META';
+    statusHoje.className = 'prod-status red';
+  }
+
+  // Total
+  const pctTotal = Math.min(100, Math.round((prospectadosTotal / META_GERAL) * 100));
+  document.getElementById('prod-total').textContent = prospectadosTotal;
+  document.getElementById('prod-total-pct').textContent = pctTotal + '%';
+  
+  const faltamTotal = Math.max(0, META_GERAL - prospectadosTotal);
+  document.getElementById('prod-total-faltam').textContent = 
+    prospectadosTotal >= META_GERAL ? '✓ Meta geral atingida!' : `Faltam ${faltamTotal} contatos`;
+  
+  const barTotal = document.getElementById('prod-total-bar');
+  barTotal.style.width = pctTotal + '%';
+  const statusTotal = document.getElementById('prod-total-status');
+  
+  // Dias restantes e ritmo necessário
+  const agora = new Date();
+  const diasRestantes = Math.max(0, Math.ceil((META_DATA - agora) / (1000 * 60 * 60 * 24)));
+  const ritmoNecessario = diasRestantes > 0 ? Math.ceil(faltamTotal / diasRestantes) : faltamTotal;
+  
+  document.getElementById('prod-deadline').textContent = 
+    `${diasRestantes} dias restantes · ritmo necessário: ${ritmoNecessario}/dia`;
+  
+  if (pctTotal >= 100) {
+    barTotal.className = 'prod-bar green';
+    statusTotal.textContent = '◉ META ATINGIDA'; statusTotal.className = 'prod-status green';
+  } else if (ritmoNecessario <= META_DIARIA) {
+    barTotal.className = 'prod-bar green';
+    statusTotal.textContent = '◉ NO RITMO CERTO'; statusTotal.className = 'prod-status green';
+  } else if (ritmoNecessario <= META_DIARIA * 1.3) {
+    barTotal.className = 'prod-bar yellow';
+    statusTotal.textContent = '◉ PRECISA ACELERAR'; statusTotal.className = 'prod-status yellow';
+  } else {
+    barTotal.className = 'prod-bar red';
+    statusTotal.textContent = '◉ RITMO INSUFICIENTE'; statusTotal.className = 'prod-status red';
+  }
+}
 
 // ── VIEW TOGGLE ──
 function setView(view) {
@@ -838,8 +948,11 @@ function renderDashboard() {
   const bySt = {};
   leads.forEach(l => { const s = l.Status||'Novo'; bySt[s]=(bySt[s]||0)+1; });
 
-  // Prospectados = quem tem Ultima Atualizacao preenchida
+  // Prospectados = com Ultima Atualizacao preenchida
   const prospectados = leads.filter(l => l['Ultima Atualizacao'] && String(l['Ultima Atualizacao']).trim() !== '').length;
+
+  // Update productivity dashboard
+  updateProdDash(prospectados);
 
   // Funil groups
   const meio = (bySt['Em conversa']||0) + (bySt['Follow up 24h']||0) + (bySt['Follow up 3d']||0);
@@ -1019,6 +1132,35 @@ function renderDashboard() {
       <div class="kpi-label">Taxa de Conversão</div>
       <div class="kpi-value" id="kpi-conv">—</div>
       <div class="kpi-sub">fechados ÷ prospectados</div>
+    </div>
+  </div>
+
+  <div class="prod-row">
+    <div class="prod-card daily">
+      <div class="prod-title">Produtividade — Hoje</div>
+      <div class="prod-numbers">
+        <div class="prod-current" id="prod-hoje">0</div>
+        <div class="prod-meta">/ 50 <span class="prod-pct" id="prod-hoje-pct">0%</span></div>
+      </div>
+      <div class="prod-sub" id="prod-hoje-faltam">Faltam 50 envios para bater a meta</div>
+      <div class="prod-bar-wrap">
+        <div class="prod-bar" id="prod-hoje-bar" style="width:0%"></div>
+      </div>
+      <div class="prod-status" id="prod-hoje-status">◉ AGUARDANDO INÍCIO</div>
+    </div>
+
+    <div class="prod-card total">
+      <div class="prod-title">Meta Geral — 1.200 até 10/06</div>
+      <div class="prod-numbers">
+        <div class="prod-current" id="prod-total">0</div>
+        <div class="prod-meta">/ 1200 <span class="prod-pct" id="prod-total-pct">0%</span></div>
+      </div>
+      <div class="prod-sub" id="prod-total-faltam">Carregando...</div>
+      <div class="prod-bar-wrap">
+        <div class="prod-bar" id="prod-total-bar" style="width:0%"></div>
+      </div>
+      <div class="prod-status" id="prod-total-status">◉ EM PROGRESSO</div>
+      <div class="prod-deadline" id="prod-deadline"></div>
     </div>
   </div>
 
