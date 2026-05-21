@@ -665,8 +665,8 @@ function renderLeads() {
     const s = lead.Status||'Novo';
     const cfg = STATUS_CONFIG[s]||{cls:'s-novo'};
     const phone = (lead.Telefone||'').replace(/^'+/,'');
-    const sel = selectedLead&&selectedLead._row===lead._row?'selected':'';
-    return `<div class="lead-card ${sel}" onclick="selectLead(${lead._row})">
+    const sel = selectedLead && String(selectedLead.ID) === String(lead.ID) ? 'selected' : '';
+    return `<div class="lead-card ${sel}" onclick="selectLead('${lead.ID}')">
       <div>
         <div class="lead-name">${lead.Nome||'—'}</div>
         <div class="lead-meta"><span class="lead-city">${lead.Cidade||''}</span><span class="lead-nicho">${lead.Nicho||''}</span></div>
@@ -678,8 +678,8 @@ function renderLeads() {
   }).join('');
 }
 
-function selectLead(row) {
-  selectedLead = allLeads.find(l=>l._row===row);
+function selectLead(id) {
+  selectedLead = allLeads.find(l => String(l.ID) === String(id));
   if (!selectedLead) return;
   renderLeads();
   renderDetail();
@@ -799,11 +799,11 @@ async function deleteLead() {
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'deleteLead', row: selectedLead._row })
+      body: JSON.stringify({ action: 'deleteLead', id: selectedLead.ID })
     });
     const data = await res.json();
     if (data.success) {
-      allLeads = allLeads.filter(l => l._row !== selectedLead._row);
+      allLeads = allLeads.filter(l => l.ID !== selectedLead.ID);
       selectedLead = null;
       document.getElementById('detail-panel').innerHTML = `<div class="detail-empty"><div class="detail-empty-icon">◎</div><p>Lead excluído com sucesso</p></div>`;
       updateStats();
@@ -826,13 +826,13 @@ async function saveLead() {
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'updateLead', row: selectedLead._row, status, canal, observacao: obs })
+      body: JSON.stringify({ action: 'updateLead', id: selectedLead.ID, status, canal, observacao: obs })
     });
     const data = await res.json();
     if (data.success) {
       selectedLead.Status = status; selectedLead.Canal = canal; selectedLead.Observacao = obs;
       if (data.ultimaAtualizacao) selectedLead['Ultima Atualizacao'] = data.ultimaAtualizacao;
-      const idx = allLeads.findIndex(l=>l._row===selectedLead._row);
+      const idx = allLeads.findIndex(l => String(l.ID) === String(selectedLead.ID));
       if (idx!==-1) { allLeads[idx].Status=status; allLeads[idx].Canal=canal; allLeads[idx].Observacao=obs; if (data.ultimaAtualizacao) allLeads[idx]['Ultima Atualizacao']=data.ultimaAtualizacao; }
       msg.textContent='✓ Salvo!'; msg.className='save-msg success';
       updateStats(); buildFilters(); filterLeads();
