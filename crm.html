@@ -404,10 +404,15 @@ const MESSAGES = {
     'Oi boa tarde, tudo bem?',
     'Oi'
   ],
-  'Etapa 2 — Apresentação': [
+  'Etapa 2 — Apresentação M1': [
     'Tudo bem? Eu sou o Douglas, desenvolvo tecnologia para clínicas, pilates, fisioterapia, etc. Na verdade entrei em contato para apresentar uma solução que mantém a agilidade no atendimento 24h, mesmo quando você não está disponível o seu WhatsApp continua em atendimento. Posso mostrar em 2 minutinhos?',
     'Tudo bem? Sou o Douglas, desenvolvo soluções de atendimento para pilates, fisioterapia e clínicas. Entrei em contato porque tenho um assistente digital que mantém o WhatsApp de vocês respondendo 24h — mesmo quando você está em atendimento com seu aluno. Posso te mostrar funcionando bem rapidinho?',
     'Tudo bem? Me chamo Douglas, trabalho com tecnologia de atendimento para clínicas, studios, box, etc. Queria te mostrar como seu WhatsApp pode continuar atendendo sozinho mesmo quando você não está disponível — sem perder nenhum cliente. Posso mostrar rapidinho?'
+  ],
+  'Etapa 2 — Apresentação M2': [
+    'Tudo bem? Sou o Douglas, trabalho com tecnologia de atendimento. Desenvolvi um assistente que mantém seu WhatsApp respondendo 24h sozinho — mesmo quando você está em atendimento. Faz sentido para o seu estúdio?',
+    'Tudo bem? Sou o Douglas, trabalho com tecnologia de atendimento para clínicas e estúdios. Desenvolvi um assistente digital que atende seus clientes pelo WhatsApp 24h — qualifica, tira dúvidas e agenda automaticamente. Faz sentido para o seu negócio?',
+    'Tudo bem? Sou o Douglas, desenvolvo tecnologia de atendimento para clínicas e estúdios. Todo dia negócios perdem clientes por não responder rápido no WhatsApp. Desenvolvi um assistente que resolve isso 24h. Posso mostrar em 40 segundos?'
   ],
   'Etapa 3 — Envio do vídeo': [
     'Preparei um vídeo de 40 segundos mostrando como o assistente resolve o atendimento sozinho. Dá uma olhada e me fala se faz sentido no seu atendimento',
@@ -594,22 +599,32 @@ function buildFilters() {
   const statusCounts = {};
   allLeads.forEach(l => { const s = l.Status || 'Novo'; statusCounts[s] = (statusCounts[s]||0)+1; });
   const sf = document.getElementById('status-filters');
-  sf.innerHTML = `<div class="filter-btn active" data-status="todos" onclick="setStatusFilter('todos',this)"><div class="filter-dot" style="background:#9090a8"></div><span class="filter-name">Todos</span><span class="filter-count">${allLeads.length}</span></div>`;
+  sf.innerHTML = `<div class="filter-btn ${activeStatus==='todos'?'active':''}" data-status="todos" onclick="setStatusFilter('todos',this)"><div class="filter-dot" style="background:#9090a8"></div><span class="filter-name">Todos</span><span class="filter-count">${allLeads.length}</span></div>`;
   Object.entries(statusCounts).sort((a,b)=>b[1]-a[1]).forEach(([s,c]) => {
     const cfg = STATUS_CONFIG[s]||{dot:'#9090a8'};
-    sf.innerHTML += `<div class="filter-btn" data-status="${s}" onclick="setStatusFilter('${s}',this)"><div class="filter-dot" style="background:${cfg.dot}"></div><span class="filter-name">${s}</span><span class="filter-count">${c}</span></div>`;
+    sf.innerHTML += `<div class="filter-btn ${activeStatus===s?'active':''}" data-status="${s}" onclick="setStatusFilter('${s}',this)"><div class="filter-dot" style="background:${cfg.dot}"></div><span class="filter-name">${s}</span><span class="filter-count">${c}</span></div>`;
   });
   const cities = [...new Set(allLeads.map(l=>l.Cidade).filter(Boolean))].sort();
   const cf = document.getElementById('city-filters');
-  cf.innerHTML = `<div class="filter-btn active" data-city="todas" onclick="setCityFilter('todas',this)"><div class="filter-dot" style="background:#9090a8"></div><span class="filter-name">Todas</span><span class="filter-count">${allLeads.length}</span></div>`;
+  cf.innerHTML = `<div class="filter-btn ${activeCity==='todas'?'active':''}" data-city="todas" onclick="setCityFilter('todas',this)"><div class="filter-dot" style="background:#9090a8"></div><span class="filter-name">Todas</span><span class="filter-count">${allLeads.length}</span></div>`;
   cities.forEach(city => {
     const count = allLeads.filter(l=>l.Cidade===city).length;
-    cf.innerHTML += `<div class="filter-btn" data-city="${city}" onclick="setCityFilter('${city}',this)"><div class="filter-dot" style="background:#5a5a70"></div><span class="filter-name">${city}</span><span class="filter-count">${count}</span></div>`;
+    cf.innerHTML += `<div class="filter-btn ${activeCity===city?'active':''}" data-city="${city}" onclick="setCityFilter('${city}',this)"><div class="filter-dot" style="background:#5a5a70"></div><span class="filter-name">${city}</span><span class="filter-count">${count}</span></div>`;
   });
 }
 
-function setStatusFilter(s, el) { activeStatus=s; document.querySelectorAll('#status-filters .filter-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); filterLeads(); }
-function setCityFilter(c, el) { activeCity=c; document.querySelectorAll('#city-filters .filter-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); filterLeads(); }
+function setStatusFilter(s, el) { 
+  activeStatus = s; 
+  document.querySelectorAll('#status-filters .filter-btn').forEach(b => b.classList.remove('active')); 
+  el.classList.add('active'); 
+  filterLeads(); 
+}
+function setCityFilter(c, el) { 
+  activeCity = c; 
+  document.querySelectorAll('#city-filters .filter-btn').forEach(b => b.classList.remove('active')); 
+  el.classList.add('active'); 
+  filterLeads(); 
+}
 
 function filterLeads() {
   const q = document.getElementById('search-input').value.toLowerCase();
@@ -621,12 +636,23 @@ function filterLeads() {
   });
   // Sort by date - oldest first (empty dates go to end)
   filteredLeads.sort((a, b) => {
-    const da = a['Ultima Atualizacao'] || '';
-    const db = b['Ultima Atualizacao'] || '';
+    const da = a['Ultima Atualizacao'] ? String(a['Ultima Atualizacao']).trim() : '';
+    const db = b['Ultima Atualizacao'] ? String(b['Ultima Atualizacao']).trim() : '';
     if (!da && !db) return 0;
     if (!da) return 1;
     if (!db) return -1;
-    return String(da).localeCompare(String(db));
+    // Parse DD/MM/YYYY HH:MM to comparable string YYYY-MM-DD HH:MM
+    const parseDate = (s) => {
+      if (s.includes('/')) {
+        const parts = s.split(' ');
+        const dateParts = parts[0].split('/');
+        if (dateParts.length === 3) {
+          return `${dateParts[2]}-${dateParts[1]}-${dateParts[0]} ${parts[1]||'00:00'}`;
+        }
+      }
+      return s;
+    };
+    return parseDate(da).localeCompare(parseDate(db));
   });
   renderLeads();
 }
@@ -888,13 +914,21 @@ function updateProdDash(prospectadosTotal) {
   barTotal.style.width = pctTotal + '%';
   const statusTotal = document.getElementById('prod-total-status');
   
-  // Dias restantes e ritmo necessário
+  // Dias úteis restantes até 10/06
   const agora = new Date();
-  const diasRestantes = Math.max(0, Math.ceil((META_DATA - agora) / (1000 * 60 * 60 * 24)));
-  const ritmoNecessario = diasRestantes > 0 ? Math.ceil(faltamTotal / diasRestantes) : faltamTotal;
+  let diasUteis = 0;
+  let d = new Date(agora);
+  d.setHours(0,0,0,0);
+  const metaDate = new Date('2026-06-10T23:59:59-03:00');
+  while (d <= metaDate) {
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) diasUteis++;
+    d.setDate(d.getDate() + 1);
+  }
+  const ritmoNecessario = diasUteis > 0 ? Math.ceil(faltamTotal / diasUteis) : faltamTotal;
   
   document.getElementById('prod-deadline').textContent = 
-    `${diasRestantes} dias restantes · ritmo necessário: ${ritmoNecessario}/dia`;
+    `${diasUteis} dias úteis restantes · ritmo necessário: ${ritmoNecessario}/dia`;
   
   if (pctTotal >= 100) {
     barTotal.className = 'prod-bar green';
