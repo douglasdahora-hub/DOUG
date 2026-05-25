@@ -276,7 +276,8 @@ body {
 .script-blur { filter: blur(4px); opacity: 0.4; }
 .script-overlay {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -359,7 +360,7 @@ body {
       <div class="logo-title">D.O.U.G. System</div>
     </div>
     <button class="btn-trigger" id="btn-trigger" onclick="dispararAutomacao()">
-      <span id="btn-text">⚡ Gerar Leads</span>
+      ⚡ Gerar Leads
     </button>
   </div>
 
@@ -372,6 +373,7 @@ body {
       <div class="search-box">
         <input type="text" class="search-input" id="search-input" placeholder="Buscar por empresa, nicho ou cidade..." oninput="filtrarLeads()">
       </div>
+  
       <div class="lead-list" id="lead-list"></div>
     </div>
 
@@ -436,18 +438,14 @@ function renderLeads(leads) {
   const container = document.getElementById('lead-list');
   document.getElementById('lead-counter').innerText = String(leads.length).padStart(2, '0');
   container.innerHTML = '';
-  
   leads.forEach(lead => {
     const item = document.createElement('div');
     item.className = `lead-item ${currentLead && currentLead.id === lead.id ? 'active' : ''}`;
     item.onclick = () => selecionarLead(lead);
     
-    // LINHA CORRIGIDA: ADICIONADO APENAS O SUPORTE PARA EXIBIÇÃO DO BAIRRO CASO ELE EXISTA
-    const bairroTexto = lead.Bairro ? `${lead.Bairro} · ` : '';
-    
     item.innerHTML = `
       <div class="lead-name">${lead.Nome}</div>
-      <div class="lead-sub">${lead.Nicho || ''} · ${bairroTexto}${lead.Cidade || ''}</div>
+      <div class="lead-sub">${lead.Nicho || ''} · ${lead.Bairro || ''} · ${lead.Cidade || ''}</div>
       <div class="status-badge status-${String(lead.Status).toLowerCase()}">${lead.Status || 'Novo'}</div>
     `;
     container.appendChild(item);
@@ -460,8 +458,7 @@ function filtrarLeads() {
   const filtrados = allLeads.filter(l => 
     String(l.Nome).toLowerCase().includes(query) ||
     String(l.Nicho).toLowerCase().includes(query) ||
-    String(l.Cidade).toLowerCase().includes(query) ||
-    String(l.Bairro).toLowerCase().includes(query)
+    String(l.Cidade).toLowerCase().includes(query)
   );
   renderLeads(filtrados);
 }
@@ -471,7 +468,6 @@ function selecionarLead(lead) {
   renderLeads(document.getElementById('search-input').value ? allLeads.filter(l => 
     String(l.Nome).toLowerCase().includes(document.getElementById('search-input').value.toLowerCase())
   ) : allLeads);
-
   const rightPanel = document.getElementById('panel-right');
   rightPanel.innerHTML = `
     <div class="workspace-layout">
@@ -484,11 +480,11 @@ function selecionarLead(lead) {
               <span>•</span>
               <span>${lead.Nicho}</span>
               <span>•</span>
-              <span>${lead.Bairro ? lead.Bairro + ', ' : ''}${lead.Cidade}</span>
+              <span>${lead.Cidade}</span>
             </div>
           </div>
           <div class="status-badge status-${String(lead.Status).toLowerCase()}" style="font-size:12px; padding:4px 10px;">
-            ${lead.Status || 'Novo'}
+             ${lead.Status || 'Novo'}
           </div>
         </div>
 
@@ -498,7 +494,7 @@ function selecionarLead(lead) {
             <div class="tel-num">${lead.Telefone}</div>
           </div>
           <a href="https://wa.me/${String(lead.Telefone).replace(/[^0-9]/g,'')}" target="_blank" class="btn-wpp" onclick="contabilizarAbordagem()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.324 5.328 0 11.859 0c3.166.001 6.141 1.233 8.378 3.471 2.238 2.238 3.469 5.214 3.47 8.381-.003 6.535-5.328 11.86-11.859 11.86-2.004-.001-3.973-.51-5.716-1.483zm6.495-3.327l.386.23c1.5.892 3.21 1.364 4.961 1.365 5.513 0 10.002-4.49 10.006-10.004.002-2.672-1.037-5.184-2.926-7.073-1.89-1.89-4.401-2.93-7.076-2.932-5.517 0-10.006 4.49-10.01 10.005-.001 1.79.469 3.538 1.362 5.035l.254.427-1.01 3.694z"/></svg>
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.324 5.328 0 11.859 0c3.166.001 6.141 1.233 8.378 3.471 2.238 2.238 3.469 5.214 3.47 8.381-.003 6.535-5.328 11.86-11.859 11.86-2.004-.001-3.973-.51-5.716-1.483zm6.495-3.327l.386.23c1.5.892 3.21 1.364 4.961 1.365 5.513 0 10.002-4.49 10.006-10.004.002-2.672-1.037-5.184-2.926-7.073-1.89-1.89-4.401-2.93-7.076-2.932-5.517 0-10.006 4.49-10.01 10.005-.001 1.79.469 3.538 1.362 5.035l.254.427-1.01 3.694z"/></svg>
             Abrir WhatsApp
           </a>
         </div>
@@ -537,13 +533,16 @@ function selecionarLead(lead) {
         <div class="side-card">
           <div class="side-card-title">Abordagem 1 — Mensagem de Impacto (Bait)</div>
           <div class="script-box" onclick="copiarTexto(this)">
-            Olá, tudo bem? Sou o D.O.U.G., assistente virtual do Douglas. Notei que a ${lead.Nome} possui excelentes avaliações em ${lead.Cidade}. Vocês teriam capacidade para receber mais 15 a 20 novos clientes de ${lead.Nicho} este mês através de automação?
+             Olá, tudo bem? Sou o D.O.U.G., assistente virtual do Douglas.
+Notei que a ${lead.Nome} possui excelentes avaliações em ${lead.Cidade}. Vocês teriam capacidade para receber mais 15 a 20 novos clientes de ${lead.Nicho} este mês através de automação?
           </div>
         </div>
         <div class="side-card">
           <div class="side-card-title">Abordagem 2 — Apresentação Técnica (Reveal)</div>
           <div class="script-box script-blur-logic" id="card-reveal" onclick="copiarTexto(this)">
-            <div class="script-blur" id="text-reveal">Perfeito! Nós desenvolvemos sistemas inteligentes sob medida que automatizam o atendimento do seu WhatsApp, qualificam o cliente e agendam o horário direto na sua planilha, sem que você precise perder tempo digitando. Podemos agendar uma demonstração de 10 minutos na próxima terça?</div>
+            <div class="script-blur" id="text-reveal">Perfeito!
+Nós desenvolvemos sistemas inteligentes sob medida que automatizam o atendimento do seu WhatsApp, qualificam o cliente e agendam o horário direto na sua planilha, sem que você precise perder tempo digitando.
+Podemos agendar uma demonstração de 10 minutos na próxima terça?</div>
             <div class="script-overlay" id="overlay-reveal">⚡ Clique para liberar após enviar o Bait</div>
           </div>
         </div>
@@ -637,7 +636,6 @@ function atualizarCardsProdutividadeVisual() {
   document.getElementById('prod-bait').innerText = rodadaStatus.bait;
   document.getElementById('prod-reveal').innerText = rodadaStatus.reveal;
   document.getElementById('prod-dia').innerText = rodadaStatus.total;
-
   const pctBait = Math.min((rodadaStatus.bait / 20) * 100, 100);
   const pctReveal = Math.min((rodadaStatus.reveal / 20) * 100, 100);
   const pctDia = Math.min((rodadaStatus.total / 40) * 100, 100);
@@ -645,7 +643,6 @@ function atualizarCardsProdutividadeVisual() {
   document.getElementById('prod-bait-bar').style.width = `${pctBait}%`;
   document.getElementById('prod-reveal-bar').style.width = `${pctReveal}%`;
   document.getElementById('prod-dia-bar').style.width = `${pctDia}%`;
-
   if(rodadaStatus.bait >= 20) document.getElementById('prod-bait-status').innerText = "✓ METAS ATINGIDAS";
   if(rodadaStatus.reveal >= 20) document.getElementById('prod-reveal-status').innerText = "✓ METAS ATINGIDAS";
   if(rodadaStatus.total >= 40) document.getElementById('prod-dia-status').innerText = "✓ CONCLUÍDO";
@@ -665,7 +662,7 @@ async function salvarAlteracoesLead() {
     });
     const r = await res.json();
     if (r.success) {
-      showToast("Dados atualizados com sucesso!");
+      showToast("Dados updated com sucesso!");
       await carregarLeads();
     } else {
       showToast("Erro: " + r.error);
@@ -715,7 +712,6 @@ function renderizarGraficos() {
     if(statusContagem[l.Status] !== undefined) statusContagem[l.Status]++;
     if(l.Nicho) nichoContagem[l.Nicho] = (nichoContagem[l.Nicho] || 0) + 1;
   });
-
   const total = allLeads.length || 1;
   const stages = [
     { label: 'Prospecção', num: allLeads.length },
@@ -723,7 +719,6 @@ function renderizarGraficos() {
     { label: 'Reuniões', num: allLeads.filter(l=>['Reuniao','Fechado'].includes(l.Status)).length },
     { label: 'Fechados', num: statusContagem.Fechado }
   ];
-
   const funilContainer = document.getElementById('funil-wrap');
   if(funilContainer) {
     funilContainer.innerHTML = '';
@@ -782,7 +777,6 @@ async function dispararAutomacao() {
   
   let tempo = 45;
   btn.innerText = `⏳ Aguarde, seu lead está a caminho (${tempo}s)...`;
-  
   const timer = setInterval(() => {
     tempo--;
     if(tempo > 0) {
@@ -793,7 +787,6 @@ async function dispararAutomacao() {
       btn.disabled = false;
     }
   }, 1000);
-
   try {
     await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors' });
     showToast("Disparo realizado! Atualizando dados em instantes...");
