@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>D.O.U.G. CRM</title>
+<title>D.O.U.G. CRM v11</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -581,13 +581,23 @@ let activeStatus = 'todos', activeCity = 'todas';
 async function gerarLeads() {
   const btn = document.getElementById('btn-gerar-leads');
   btn.disabled = true;
-  btn.textContent = '⏳ Gerando...';
+  btn.textContent = '⏳ Aguarde, seu lead está a caminho...';
   try {
     await fetch('https://doug.petafetivo.com/webhook/gerar-leads');
-    btn.textContent = '✓ Gerado!';
-    setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Gerar Leads'; loadLeads(); }, 3000);
+    let secs = 45;
+    const interval = setInterval(() => {
+      secs--;
+      if (secs > 0) {
+        btn.textContent = '⏳ Preparando leads... ' + secs + 's';
+      } else {
+        clearInterval(interval);
+        btn.textContent = '✓ Leads gerados!';
+        loadLeads();
+        setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Gerar Leads'; }, 3000);
+      }
+    }, 1000);
   } catch(e) {
-    btn.textContent = '✗ Erro';
+    btn.textContent = '✗ Erro ao gerar';
     setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Gerar Leads'; }, 3000);
   }
 }
