@@ -827,8 +827,9 @@ function copyText(text,btn) {
 
 async function saveLead() {
   if(!selectedLead)return;
-  const btn=document.getElementById('btn-save');
-  const msg=document.getElementById('save-msg');
+  const btn=document.querySelector('.btn-save');
+  const msg=document.querySelector('.save-msg');
+  if(!btn||!msg)return;
   const status=document.getElementById('edit-status').value;
   const canal=document.getElementById('edit-canal').value;
   const obs=document.getElementById('edit-obs').value;
