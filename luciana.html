@@ -194,8 +194,8 @@ body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: v
 .btn-save:hover { background: var(--accent2); transform: translateY(-1px); }
 .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .save-msg { text-align: center; font-size: 11px; padding: 5px; border-radius: 6px; display: none; }
-.save-msg.success { background: var(--accent-dim); color: var(--accent); display: block; }
-.save-msg.error { background: rgba(255,80,80,0.1); color: #ff5050; display: block; }
+.save-msg.success { background: var(--accent-dim); color: var(--accent); display: block !important; }
+.save-msg.error { background: rgba(255,80,80,0.1); color: #ff5050; display: block !important; }
 
 /* MSG BOX */
 .msg-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -833,9 +833,12 @@ async function saveLead() {
   const canal=document.getElementById('edit-canal').value;
   const obs=document.getElementById('edit-obs').value;
   btn.disabled=true; btn.textContent='Salvando...'; msg.className='save-msg';
+  const payload={ action:ACTIONS[currentMode].update, id:selectedLead.ID, status, canal, observacao:obs };
+  console.log('saveLead payload:', JSON.stringify(payload));
   try {
-    const res=await fetch(API_URL,{ method:'POST', body:JSON.stringify({ action:ACTIONS[currentMode].update, id:selectedLead.ID, status, canal, observacao:obs }) });
+    const res=await fetch(API_URL,{ method:'POST', body:JSON.stringify(payload) });
     const data=await res.json();
+    console.log('saveLead response:', JSON.stringify(data));
     if(data.success){
       selectedLead.Status=status; selectedLead.Canal=canal; selectedLead.Observacao=obs;
       if(data.ultimaAtualizacao)selectedLead['Ultima Atualizacao']=data.ultimaAtualizacao;
