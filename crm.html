@@ -606,7 +606,7 @@ async function gerarLeads() {
   try {
     const destinoParam = currentDestino === 'lp' ? '?destino=lp' : '';
     await fetch('https://doug.petafetivo.com/webhook/gerar-leads' + destinoParam);
-    let secs = 45;
+    let secs = 20;
     const interval = setInterval(() => {
       secs--;
       if (secs > 0) {
