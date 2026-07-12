@@ -307,6 +307,10 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
     <button class="btn-refresh" onclick="loadLeads()">↻ Atualizar</button>
     <button class="btn-gerar-leads" id="btn-gerar-leads" onclick="gerarLeads()">⚡ Gerar Leads</button>
     <div class="view-toggle">
+      <button class="view-btn active" id="btn-dest-doug" onclick="setDestino('doug')">D.O.U.G.</button>
+      <button class="view-btn" id="btn-dest-lp" onclick="setDestino('lp')">LP</button>
+    </div>
+    <div class="view-toggle">
       <button class="view-btn active" id="btn-view-leads" onclick="setView('leads')">⬛ Leads</button>
       <button class="view-btn" id="btn-view-dash" onclick="setView('dash')">◈ Dashboard</button>
     </div>
@@ -380,6 +384,23 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 <script>
 // ── CONFIG ──
 const API_URL = 'https://script.google.com/macros/s/AKfycbxkU1uTaynJdaFNkQkDyAnCt7GO-9-88GO7KE9R_qCbGd24fCq5F0l4tuqFDCOlMOn3/exec';
+
+let currentDestino = 'doug'; // 'doug' ou 'lp'
+
+function setDestino(destino) {
+  currentDestino = destino;
+  document.getElementById('btn-dest-doug').classList.toggle('active', destino === 'doug');
+  document.getElementById('btn-dest-lp').classList.toggle('active', destino === 'lp');
+  selectedLead = null;
+  loadLeads();
+}
+
+function getAction(base) {
+  // Monta o nome da action certa conforme o destino selecionado
+  // base = 'getLeads' | 'updateLead' | 'deleteLead'
+  if (currentDestino === 'lp') return base + 'LP';
+  return base;
+}
 
 const STATUS_CONFIG = {
   'Novo':                  { cls: 's-novo',         dot: '#4caf50' },
@@ -583,7 +604,8 @@ async function gerarLeads() {
   btn.disabled = true;
   btn.textContent = '⏳ Aguarde, seu lead está a caminho...';
   try {
-    await fetch('https://doug.petafetivo.com/webhook/gerar-leads');
+    const destinoParam = currentDestino === 'lp' ? '?destino=lp' : '';
+    await fetch('https://doug.petafetivo.com/webhook/gerar-leads' + destinoParam);
     let secs = 45;
     const interval = setInterval(() => {
       secs--;
@@ -604,7 +626,7 @@ async function gerarLeads() {
 async function loadLeads() {
   document.getElementById('leads-grid').innerHTML = '<div class="loading"><div class="loading-spinner"></div><span>Carregando...</span></div>';
   try {
-    const res = await fetch(API_URL + '?action=getLeads');
+    const res = await fetch(API_URL + '?action=' + getAction('getLeads'));
     const data = await res.json();
     allLeads = data.leads || [];
     updateStats();
@@ -722,7 +744,7 @@ function renderDetail() {
   document.getElementById('detail-panel').innerHTML = `
     <div>
       <div class="detail-name">${l.Nome||'—'}</div>
-      <div class="detail-nicho">${l.Nicho||''} · ${l.Cidade||''} · ${l.Bairro||''}</div>
+      <div class="detail-nicho">${l.Nicho||''} · ${l.Cidade||''}</div>
     </div>
 
     <div class="detail-grid">
@@ -824,7 +846,7 @@ async function deleteLead() {
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'deleteLead', id: selectedLead.ID })
+      body: JSON.stringify({ action: getAction('deleteLead'), id: selectedLead.ID })
     });
     const data = await res.json();
     if (data.success) {
@@ -851,7 +873,7 @@ async function saveLead() {
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'updateLead', id: selectedLead.ID, status, canal, observacao: obs })
+      body: JSON.stringify({ action: getAction('updateLead'), id: selectedLead.ID, status, canal, observacao: obs })
     });
     const data = await res.json();
     if (data.success) {
